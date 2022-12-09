@@ -5,75 +5,65 @@
 #include <deque>
 #include <regex>
 #include <map>
-// Used name file since directories are files.
-enum Types {
-  FILE,
-  DIRECTORY
-};
-
-struct FileStruct {
-  Types type;
-  int size;
-};
-
 int main()
 {
   int total{0};
   std::ifstream inputFile;
   std::string currentLine;
   inputFile.open("Day7.txt");
-  std::deque<FileStruct> directoryStack;
-  std::map<std::string, FileStruct> allElements;
+  std::deque<std::string> directoryStack;
+  std::map<std::string, int> allElements;
   std::regex spaceRegex(" ");
   while (inputFile.good())
   {
-    if(currentLine.find("$ cd") == 0) // Starts with $
+    std::getline(inputFile, currentLine);
+    if (currentLine.find("$ cd") == 0) // Starts with $
     {
       std::string proposedTarget = currentLine.substr(5);
-      if(proposedTarget == "..") 
+      if (proposedTarget == "..")
       {
         directoryStack.pop_back();
       }
-      else 
+      else
       {
-        if(allElements.find(proposedTarget) != allElements.end())
+        if (allElements.find(proposedTarget) != allElements.end())
         {
-          directoryStack.push_back(allElements[proposedTarget]);
+          directoryStack.push_back(proposedTarget);
         }
-        else 
+        else
         {
-          Types t = DIRECTORY;
-          FileStruct elem = {t, 0};
-          directoryStack.push_back(elem);
-          allElements[proposedTarget] = elem;
+          directoryStack.push_back(proposedTarget);
+          allElements[proposedTarget] = 0;
         }
       }
     }
-    else if(currentLine.find("$ ls") == 0)
+    else if (currentLine.find("$ ls") == 0)
     {
       // Do nothing
     }
-    else 
+    else
     {
-      std::sregex_token_iterator itr(currentLine.begin(), currentLine.end(), spaceRegex);
-      if(*itr == "dir") 
+      std::sregex_token_iterator itr(currentLine.begin(), currentLine.end(), spaceRegex, -1);
+      if (*itr == "dir")
       {
         // Do nothing
       }
-      else 
+      else
       {
-        for(auto it = directoryStack.begin(); it != directoryStack.end(); it++) {
-          it->size += std::stoi(*itr);
+        for (auto it = directoryStack.begin(); it != directoryStack.end(); it++)
+        {
+          allElements[*it] += std::stoi(*itr);
         }
       }
     }
-    for(auto j = allElements.begin(); j != allElements.end(); j++) {
-      std::cout << j->first << ' ' << j->second.size << std::endl; 
-      if(j->second.size <= 100000) 
-      {
-        total += j->second.size;
-      }
-    } 
   }
+  for (auto j = allElements.begin(); j != allElements.end(); j++)
+  {
+    if (j->second <= 100000)
+    {
+      total += j->second;
+    }
+  }
+  std::cout << total << std::endl;
   return EXIT_SUCCESS;
 }
